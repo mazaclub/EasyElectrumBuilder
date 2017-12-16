@@ -21,10 +21,12 @@ EasyElectrum uses pyinstaller to create Windows, macOS, and Linux builds, and bu
 
 EasyElectrum will include scripts to provision and launch each builder VM from. your host OS, and the necessary configuration to retrieve the build artifacts and release files. It should be suitable for use in your CI workflow.
 
-## Requirements
+## Roadmap
 
 EasyElectrum v0.1.0 will be built against Electrum, Electrum-GRS, and Tate (ElectruMAZA), in that order. 
   - v0.0.1 Electrum for Bitcoin (original Source) - **Version 3.0 and above ONLY**
   - v0.0.2 Electrum for Groestlcoin - supports C Extension hash modules (supports any coin needing this) 
   - v0.0.3 Tate (ElectuMAZA) - potentially support for pre 3.0 upstream code and python2.7
+
+v0.1.0 will have rudimentary support for Windows build hosts, pull requests will be welcomed. 
 
