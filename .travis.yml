@@ -24,7 +24,7 @@ script:
 after_success:
     - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
     - pip3 install pyinstaller pycurl requests PyQt5
-    - pip3 install trezor keepkey btchip-python
+    - pip3 install groestlcoin-hash trezor keepkey btchip-python
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install gettext ; echo "[install]" > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
     - contrib/make_locale
     - contrib/make_packages
