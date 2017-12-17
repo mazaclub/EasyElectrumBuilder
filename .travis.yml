@@ -3,11 +3,8 @@ os:
  - linux
 
 sudo: false
-language: python
-python:
-    - "3.5"
-    - "3.6"
 install:
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
     - pip install tox
     - pip install tox-travis
 script:
