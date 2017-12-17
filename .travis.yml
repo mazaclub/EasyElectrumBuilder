@@ -27,5 +27,5 @@ after_success:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install gettext ; echo "[install]" > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
     - contrib/make_locale
     - contrib/make_packages
-    - pip3 install trezor keepkey btchip-python -t packages
+    - pip3 install trezor keepkey btchip-python
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over" ; fi
