@@ -1,3 +1,7 @@
+os:
+ - osx
+ - linux
+
 sudo: false
 language: python
 python:
@@ -7,6 +11,12 @@ install:
     - pip install tox
     - pip install tox-travis
 script:
-    - tox
+    - echo "skip tox for build testing"
 after_success:
-    - if [ "$TRAVIS_BRANCH" = "master" ]; then pip install pycurl requests && contrib/make_locale; fi
+    - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install gettext ; fi
+    - pip install pyinstaller pycurl requests PyQt5
+    - contrib/make_locale
+    - contrib/make_packages
+    - pip install trezor keepkey btchip-python -t packages
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else ; echo "test over" ; fi
