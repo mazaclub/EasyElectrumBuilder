@@ -4,21 +4,21 @@ matrix:
       dist: xenial
       sudo: required
       language: python
-        - 3.5
-        - 3.6
+        - "3.5"
+        - "3.6"
     - os: osx
       osx_image: xcode_9.2
       language: generic
 install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
-    - pip install tox
-    - pip install tox-travis
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi 
 script:
     - echo "skip tox for build testing"
 after_success:
     - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install gettext ; fi
-    - pip install pyinstaller pycurl requests PyQt5
+    - pip3 install pyinstaller pycurl requests PyQt5
     - contrib/make_locale
     - contrib/make_packages
     - pip install trezor keepkey btchip-python -t packages
