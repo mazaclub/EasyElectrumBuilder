@@ -22,4 +22,4 @@ after_success:
     - contrib/make_locale
     - contrib/make_packages
     - pip install trezor keepkey btchip-python -t packages
-    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else ; echo "test over" ; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over" ; fi
