@@ -3,7 +3,7 @@
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 travis = os.environ.get('TRAVIS_BUILD_DIR')
-home = travis + '/easyelectrumbuilder/'
+home = travis + '/'
 block_cipher=None
 
 # see https://github.com/pyinstaller/pyinstaller/issues/2005
