@@ -12,9 +12,6 @@ matrix:
       osx_image: xcode_9.2
       language: generic
       env: HOMEBREW_NO_AUTO_UPDATE=1
-    - os: osx
-      language: generic
-      env: HOMEBREW_NO_AUTO_UPDATE=1
 install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
@@ -25,7 +22,10 @@ after_success:
     - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
     - pip3 install pyinstaller pycurl requests PyQt5
     - pip3 install groestlcoin-hash trezor keepkey btchip-python
-    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install gettext ; echo "[install]" > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi 
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext ; echo "[install]" > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
+    - pyrcc5 icons.qrc -o gui/qt/icons_rc.py
+    - protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
     - contrib/make_locale
     - contrib/make_packages
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over" ; fi
