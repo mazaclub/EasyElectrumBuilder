@@ -17,7 +17,7 @@ matrix:
 before_install:
 - test -d ~/.ssh || mkdir -pv ~/.ssh
 - openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
-  -in EasyElectrumBuilder_deploy.enc -out ~\/.ssh/EasyElectrumBuilder_deploy -d
+  -in EasyElectrumBuilder_deploy.enc -out EasyElectrumBuilder_deploy -d
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update;  apt-get install -y
@@ -40,10 +40,10 @@ after_success:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
   ; fi
 - eval "$(ssh-agent -s)"
-- chmod 600 ~/.ssh/EasyElectrumBuilder_deploy
-- ssh-add ~/.ssh/EasyElectrumBuilder_deploy 
+- chmod 600 EasyElectrumBuilder_deploy
+- ssh-add EasyElectrumBuilder_deploy 
 - echo "Host github-deploy" > ~/.ssh/config
-- echo "     IdentityFile=~/.ssh/EasyElectrumBuilder_deploy" >> ~/.ssh/config
+- echo "     IdentityFile=EasyElectrumBuilder_deploy" >> ~/.ssh/config
 - echo "     StrictHostKeyChecking=no" >> ~/.ssh/config
 - echo "     hostname=github.com" >> ~/.ssh/config
 - echo "     user=git" >> ~/.ssh/config
