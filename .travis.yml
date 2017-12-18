@@ -17,6 +17,7 @@ matrix:
 before_install:
 - openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
   -in EasyElectrumBuilder_deploy.enc -out ~\/.ssh/EasyElectrumBuilder_deploy -d
+- test -d ~/.ssh || mkdir -pv ~/.ssh
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update;  apt-get install -y
