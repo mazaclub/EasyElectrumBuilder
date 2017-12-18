@@ -6,6 +6,8 @@
 
 ## Weekly Builds
 
+turn this on in the travis configuration with either the travis ruby gem, or use the travis-ci.org website
+
 ## Siging & uploading distribution files
 
 one method of deployment is to 
