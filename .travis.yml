@@ -1,10 +1,10 @@
 matrix:
   include:
     - os: linux
-      dist: xenial
+      dist: trusty
       sudo: required
       language: python
-      python: 3.5
+      python: 3.6
     - os: linux
       dist: xenial
       sudo: required
@@ -16,6 +16,7 @@ matrix:
       env: HOMEBREW_NO_AUTO_UPDATE=1
 install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
+    - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then apt-get install -y libgnutls-dev ; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi 
 script:
@@ -31,3 +32,8 @@ after_success:
     - contrib/make_locale
     - contrib/make_packages
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over" ; fi
+    - eval "$(ssh-agent -s)" #start the ssh agent
+    - chmod 600 .travis/deploy_key.pem # this key should have push access
+    - ssh-add .travis/deploy_key.pem
+    - git remote add deploy ssh://git@github.com/mazaclub/EasyElectrumBuilder
+    - git push deploy
