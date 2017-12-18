@@ -35,5 +35,10 @@ after_success:
     - eval "$(ssh-agent -s)" #start the ssh agent
     - chmod 600 .travis/deploy_key.pem # this key should have push access
     - ssh-add .travis/deploy_key.pem
+    - echo "Host github-deploy" > ~/.ssh/config
+    - echo "     IdentityFile=.travis/deploy_key.pem" >> ~/.ssh/config
+    - echo "     StrictHostKeyChecking=no" >> ~/.ssh/config
+    - echo "     hostname=github.com" >> ~/.ssh/config
+    - echo "     user=git" >> ~/.ssh/config
     - git remote add deploy ssh://git@github.com/mazaclub/EasyElectrumBuilder
     - git push deploy HEAD:deploy
