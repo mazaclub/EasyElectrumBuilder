@@ -1,44 +1,50 @@
 matrix:
   include:
-    - os: linux
-      dist: trusty
-      sudo: required
-      language: python
-      python: 3.6
-    - os: linux
-      dist: xenial
-      sudo: required
-      language: python
-      python: 3.6
-    - os: osx
-      osx_image: xcode_9.2
-      language: generic
-      env: HOMEBREW_NO_AUTO_UPDATE=1
+  - os: linux
+    dist: trusty
+    sudo: required
+    language: python
+    python: 3.6
+  - os: linux
+    dist: xenial
+    sudo: required
+    language: python
+    python: 3.6
+  - os: osx
+    osx_image: xcode_9.2
+    language: generic
+    env: HOMEBREW_NO_AUTO_UPDATE=1
+before_install:
+- openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
+  -in EasyElectrumBuilder_deploy.enc -out ~\/.ssh/EasyElectrumBuilder_deploy -d
 install:
-    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
-    - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get install -y libgnutls30-dev ; fi
-    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
-    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi 
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update;  apt-get install -y
+  libgnutls30-dev ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi
 script:
-    - echo "skip tox for build testing"
+- echo "skip tox for build testing"
 after_success:
-    - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
-    - pip3 install pyinstaller pycurl requests PyQt5
-    - pip3 install groestlcoin-hash trezor keepkey btchip-python
-    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi 
-    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext ; echo "[install]" > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
-    - pyrcc5 icons.qrc -o gui/qt/icons_rc.py
-    - protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
-    - contrib/make_locale
-    - contrib/make_packages
-    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over" ; fi
-    - eval "$(ssh-agent -s)" #start the ssh agent
-    - chmod 600 .travis/deploy_key.pem # this key should have push access
-    - ssh-add .travis/deploy_key.pem
-    - echo "Host github-deploy" > ~/.ssh/config
-    - echo "     IdentityFile=.travis/deploy_key.pem" >> ~/.ssh/config
-    - echo "     StrictHostKeyChecking=no" >> ~/.ssh/config
-    - echo "     hostname=github.com" >> ~/.ssh/config
-    - echo "     user=git" >> ~/.ssh/config
-    - git remote add deploy ssh://github-deploy/mazaclub/EasyElectrumBuilder
-    - git push deploy HEAD:deploy
+- if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
+- pip3 install pyinstaller pycurl requests PyQt5
+- pip3 install groestlcoin-hash trezor keepkey btchip-python
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext ; echo "[install]"
+  > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
+- pyrcc5 icons.qrc -o gui/qt/icons_rc.py
+- protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
+- contrib/make_locale
+- contrib/make_packages
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
+  ; fi
+- eval "$(ssh-agent -s)"
+- chmod 600 ~/.ssh/EasyElectrumBuilder_deploy
+- ssh-add ~/.ssh/EasyElectrumBuilder_deploy 
+- echo "Host github-deploy" > ~/.ssh/config
+- echo "     IdentityFile=~/.ssh/EasyElectrumBuilder_deploy" >> ~/.ssh/config
+- echo "     StrictHostKeyChecking=no" >> ~/.ssh/config
+- echo "     hostname=github.com" >> ~/.ssh/config
+- echo "     user=git" >> ~/.ssh/config
+- git remote add deploy ssh://github-deploy/mazaclub/EasyElectrumBuilder
+- git push deploy HEAD:deploy
