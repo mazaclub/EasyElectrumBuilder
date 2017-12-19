@@ -28,7 +28,7 @@ before_install:
   -in EasyElectrumBuilder_deploy.enc -out EasyElectrumBuilder_deploy -d
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
-- if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update;  apt-get install -y
+- if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update; sudo  apt-get install -y
   libgnutls30-dev wput ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi
@@ -39,7 +39,7 @@ after_success:
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install groestlcoin-hash trezor keepkey btchip-python
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext ; echo "[install]"
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
 - pyrcc5 icons.qrc -o gui/qt/icons_rc.py
 - protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
