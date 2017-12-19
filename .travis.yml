@@ -1,27 +1,35 @@
+language: python
+env:
+  global:
+  - secure: mmQJn34vUpjW1Uf6UiWSiRrDXWNPNGA0ANcHpU2TIpXtfGuZ6UfBBId8fuwcSjuqAjV+FqzAZdy+9nB46vwqb+HHzDPzqwkJfaS4/ofiLWXzBg4vUptsQGBLeKd5lJISDi7jZHP8nhhxTkfbODCxNAbctlUfTNPrNZvIiKDnLt6pPQexo/ihO5nBHp8Cw39a991BOV7kCaFz8T7dDoNEzgpivx/CLizpfEC46yYW7bvWSz3Yz1jbFWfPQuf+BtVKIWkOuN5tGLCrgyyv45wbiAR6S9nN2tdaZ9FYOwyjbAjcLlSzFcQk+Ntgvli48tVgclZ0MKF+xpBflKnJ50Wcc7wojApjNuJIWNB4IkFAr9qbon4+SqPmSUT5mJCr/r9j/DEKF2CRFzx/BnBG4AcpwF14dbWkbUTXaM4TqBr0WY9sUuQksd+F5LBSPTsENRfIxQbk2s3lob2i/MMfhz5IfuH74Ls9ZCb2/EUFKny9o20zDZwAOoqm/6fI67RZWFYWUjcqsegaXlnAd0ihET4Nf/EUFvLw6BbfEuBlYrzu2TcFkBAsHa8tXOpYGrV52cbAvtwyI27p9d0Kvb15nrMZMOylL56TMF1LAZ97K3RvHOqrB2YwvzYgKCIIGx06/nX5RpC/nduapGB6+L2yTl5u/hPlLLgJTfACtE3lnfdT3sQ=
+  - secure: NTDgwTYteWhvdUVrKmr0JLcjbF8UUDiAZDsvmGS9q4K0wA3ziWWvsW3TmMC8ymUoxzFHOsXuq96zTq6a+fOghJiGC0cZIFJFp4uL2xrHYL/C5QWame17Vwl6Hyq1FPW5umXoYN24UCqkKqiuud3GubDd2tABcL/h6iC5Qyu7oc7nqBc603P7n99y+EQKCMvLRLv+ExvKmYLPbHhJuI5VWIyLsa6STp5ih7JKfbHAgo4CQWBAaXLwk0V1njwKnGiM2nm0QBW6mTDeoocH0usG23GXcGq9XH0u5DvGfDOvo2jmJnoHHdUVZ+11ARWy/lASpotsBbEEtnu1MGFAXVZOnkiC4YWe/P6io8B6CRnGYdfVvGKr5yya2f+NuSJ28ufDrEzJMidXfpf5c+Rmpl5ijceOE68/6WsWc1daNT35fU7/GH8sXABviFQQ30bRYyGUzy+5SW2veqLMDnKsQrKNMggTI/r7K6+ZoxazuVh1Vi1eNBkg8Juk6n/cHb26l1EGH50Jb+FCfuTAdStIjHbVjv79QZIhdrM8wEC3t6bkBPPJOZe57zNxpon3mY12VVnQLWYQiTdZIAJQ2T7lblioSoNp/lncf1Ui1/+pKg2DUUyWDzlsR26HUD1EI4FgmvJRLugCjhejvsO+b1v7CP6OX9I/aGP9F8c9xv1SttezmYQ=
 matrix:
   include:
   - os: linux
     dist: trusty
     sudo: required
-    language: python
     python: 3.6
+    env:
+      OS_ENV=linux_trusty
   - os: linux
     dist: xenial
     sudo: required
-    language: python
     python: 3.6
+    env:
+      OS_ENV=linux_xenial
   - os: osx
     osx_image: xcode_9.2
     language: generic
-    env: HOMEBREW_NO_AUTO_UPDATE=1
+    env: 
+      HOMEBREW_NO_AUTO_UPDATE=1
+      OS_ENV=osx
 before_install:
-- test -d ~/.ssh || mkdir -pv ~/.ssh
 - openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
   -in EasyElectrumBuilder_deploy.enc -out EasyElectrumBuilder_deploy -d
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update;  apt-get install -y
-  libgnutls30-dev ; fi
+  libgnutls30-dev wput ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi
 script:
@@ -39,13 +47,5 @@ after_success:
 - contrib/make_packages
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
   ; fi
-- eval "$(ssh-agent -s)"
-- chmod 600 EasyElectrumBuilder_deploy
-- ssh-add EasyElectrumBuilder_deploy 
-- echo "Host github-deploy" > ~/.ssh/config
-- echo "     IdentityFile=EasyElectrumBuilder_deploy" >> ~/.ssh/config
-- echo "     StrictHostKeyChecking=no" >> ~/.ssh/config
-- echo "     hostname=github.com" >> ~/.ssh/config
-- echo "     user=git" >> ~/.ssh/config
-- git remote add deploy ssh://github-deploy/mazaclub/EasyElectrumBuilder
-- git push deploy HEAD:deploy
+- if [ -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
+
