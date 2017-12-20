@@ -38,7 +38,6 @@ after_success:
 - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install groestlcoin-hash trezor keepkey btchip-python
-- python3 setup.py install
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
@@ -47,6 +46,8 @@ after_success:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
 - contrib/make_locale
 - contrib/make_packages
+- rm setup.cfg
+- python3 setup.py install
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
   ; fi
 - if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
