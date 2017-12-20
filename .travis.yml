@@ -37,12 +37,12 @@ after_success:
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install trezor keepkey btchip-python
 - pip3 install -r contrib/requirements.txt
-- python3 setup.py install
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
-  > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput; fi
 - pyrcc5 icons.qrc -o gui/qt/icons_rc.py
 - protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
+- python3 setup.py install
+- echo "[install]"   > setup.cfg ; echo "prefix=" >> setup.cfg
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
 - contrib/make_locale
 - contrib/make_packages
