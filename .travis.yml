@@ -32,6 +32,7 @@ install:
 script:
 - echo "skip tox for build testing"
 after_success:
+- export GIT_COMMIT_SHORT=$(git rev-parse --short HEAD)
 - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install trezor keepkey btchip-python
@@ -43,7 +44,8 @@ after_success:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
 - contrib/make_locale
 - contrib/make_packages
+- if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
   ; fi
-- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
+- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${GIT_COMMIT_SHORT}/${OS_ENV}/ ; fi
 
