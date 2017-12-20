@@ -23,9 +23,6 @@ matrix:
     env: 
       HOMEBREW_NO_AUTO_UPDATE=1
       OS_ENV=osx
-before_install:
-- openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
-  -in EasyElectrumBuilder_deploy.enc -out EasyElectrumBuilder_deploy -d
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update; sudo  apt-get install -y
@@ -37,8 +34,7 @@ script:
 after_success:
 - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
 - pip3 install pyinstaller pycurl requests PyQt5
-- pip3 install groestlcoin-hash trezor keepkey btchip-python
-- python3 setup.py install
+- pip3 install trezor keepkey btchip-python
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
