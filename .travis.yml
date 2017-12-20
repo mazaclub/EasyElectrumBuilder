@@ -47,5 +47,5 @@ after_success:
 - contrib/make_packages
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
   ; fi
-- if [ -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
+- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
 
