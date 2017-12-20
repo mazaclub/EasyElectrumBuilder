@@ -10,7 +10,8 @@ for i, x in enumerate(sys.argv):
 else:
     raise BaseException('no version')
 
-home = '/Users/voegtlin/electrum/'
+travis = os.environ.get('TRAVIS_BUILD_DIR')
+home = travis + '/'
 block_cipher=None
 
 # see https://github.com/pyinstaller/pyinstaller/issues/2005
