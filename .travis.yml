@@ -37,6 +37,7 @@ after_success:
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install trezor keepkey btchip-python
 - pip3 install -r contrib/requirements.txt
+- python3 setup.py install
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
