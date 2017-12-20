@@ -43,6 +43,7 @@ after_success:
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
 - pyrcc5 icons.qrc -o gui/qt/icons_rc.py
 - protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
 - contrib/make_locale
 - contrib/make_packages
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
