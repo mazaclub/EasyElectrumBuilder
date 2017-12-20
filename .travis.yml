@@ -38,6 +38,7 @@ after_success:
 - if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
 - pip3 install pyinstaller pycurl requests PyQt5
 - pip3 install groestlcoin-hash trezor keepkey btchip-python
+- python3 setup.py install
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
   > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
