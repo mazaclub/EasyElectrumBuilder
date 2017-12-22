@@ -10,7 +10,8 @@ for i, x in enumerate(sys.argv):
 else:
     raise BaseException('no version')
 
-home = '/Users/voegtlin/electon-cash/'
+travis = os.environ.get('TRAVIS_BUILD_DIR')
+home = travis + '/'
 block_cipher=None
 
 # see https://github.com/pyinstaller/pyinstaller/issues/2005
@@ -20,11 +21,11 @@ hiddenimports += collect_submodules('btchip')
 hiddenimports += collect_submodules('keepkeylib')
 
 datas = [
-    (home+'lib/currencies.json', 'electon-cash'),
-    (home+'lib/servers.json', 'electon-cash'),
-    (home+'lib/wordlist/english.txt', 'electon-cash/wordlist'),
-    (home+'lib/locale', 'electon-cash/locale'),
-    (home+'plugins', 'electon-cash_plugins'),
+    (home+'lib/currencies.json', 'electoncash'),
+    (home+'lib/servers.json', 'electoncash'),
+    (home+'lib/wordlist/english.txt', 'electoncash/wordlist'),
+    (home+'lib/locale', 'electoncash/locale'),
+    (home+'plugins', 'electoncash_plugins'),
 ]
 datas += collect_data_files('trezorlib')
 datas += collect_data_files('btchip')
