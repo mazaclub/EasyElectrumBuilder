@@ -14,8 +14,8 @@ if [ -e ./env/bin/activate ]; then
 else
     virtualenv env -p `which python3`
     source ./env/bin/activate
-    pip3 install --user --install-option="--prefix=" PyQt5 pyinstaller trezor keepkey btchip-python
-    pip3 install --user --install-option="--prefix=" -r contrib/requirements.txt -t packages/
+    pip3 install  PyQt5 pyinstaller trezor keepkey btchip-python
+    pip3 install -r  contrib/requirements.txt -t packages/
     pyrcc5 icons.qrc -o gui/qt/icons_rc.py
     protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
     if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
