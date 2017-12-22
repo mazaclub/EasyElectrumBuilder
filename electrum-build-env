@@ -18,6 +18,7 @@ else
     pip3 install -r  contrib/requirements.txt -t packages/
     pyrcc5 icons.qrc -o gui/qt/icons_rc.py
     protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
+    python3 setup.py install
     if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
     ./contrib/make_locale
     if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}; fi
