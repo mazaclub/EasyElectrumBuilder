@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# This script creates a virtualenv named 'env' and installs all
+# python dependencies before activating the env and running Electrum.
+# If 'env' already exists, it is activated and Electrum is started
+# without any installations. Additionally, the PYTHONPATH environment
+# variable is set properly before running Electrum.
+#
+# python-qt and its dependencies will still need to be installed with
+# your package manager.
+venv_dir=~/.electrum-venv
+contrib=$(dirname "$0")
+
+
+source $venv_dir/bin/activate
+
+echo "Installing dependencies"
+
+
+# export PYTHONPATH="/usr/local/lib/python3.6/site-packages:$PYTHONPATH"
+    pip3 install  PyQt5 pyinstaller trezor keepkey btchip-python
+    pip3 install -r  contrib/requirements.txt -t packages/
+    pyrcc5 icons.qrc -o gui/qt/icons_rc.py
+    protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
+    python3 setup.py install
+    if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
+    ./contrib/make_locale
+    if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}; fi
+    ./contrib/make_osx 
+
+
+#./electrum "$@"
+
+
+deactivate
