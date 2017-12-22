@@ -21,18 +21,18 @@ hiddenimports += collect_submodules('btchip')
 hiddenimports += collect_submodules('keepkeylib')
 
 datas = [
-    (home+'lib/currencies.json', 'electoncash'),
-    (home+'lib/servers.json', 'electoncash'),
-    (home+'lib/wordlist/english.txt', 'electoncash/wordlist'),
-    (home+'lib/locale', 'electoncash/locale'),
-    (home+'plugins', 'electoncash_plugins'),
+    (home+'lib/currencies.json', 'electroncash'),
+    (home+'lib/servers.json', 'electroncash'),
+    (home+'lib/wordlist/english.txt', 'electroncash/wordlist'),
+    (home+'lib/locale', 'electroncash/locale'),
+    (home+'plugins', 'electroncash_plugins'),
 ]
 datas += collect_data_files('trezorlib')
 datas += collect_data_files('btchip')
 datas += collect_data_files('keepkeylib')
 
 # We don't put these files in to actually include them in the script but to make the Analysis method scan them for imports
-a = Analysis([home+'electon-cash',
+a = Analysis([home+'electron-cash',
               home+'gui/qt/main_window.py',
               home+'gui/text.py',
               home+'lib/util.py',
@@ -68,13 +68,13 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          icon=home+'electon-cash.icns',
+          icon=home+'electron-cash.icns',
           console=False)
 
 app = BUNDLE(exe,
              version = VERSION,
              name='Electron-Cash.app',
-             icon=home+'electon-cash.icns',
+             icon=home+'electron-cash.icns',
              bundle_identifier=None,
              info_plist = {
                  'NSHighResolutionCapable':'True'
