@@ -33,7 +33,8 @@ script:
 - echo "skip tox for build testing"
 after_success:
 - export GIT_COMMIT_SHORT=$(git rev-parse --short HEAD)
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install openssl protobuf-c gettext wput; fi
+- ./contrib/freeze_packages.sh
 - ./electrum-build-env
 - if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}; fi
 - if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${GIT_COMMIT_SHORT}/${OS_ENV}/ ; fi
