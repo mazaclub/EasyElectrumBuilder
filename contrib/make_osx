@@ -5,4 +5,4 @@ VER=$(git describe --tags)
 VERSION=${VERSION:-${VER}}
 pyinstaller --noconfirm --ascii --name $VERSION contrib/osx.spec
 #pyinstaller --onefile --windowed --runtime-tmpdir /tmp  --noconfirm --ascii --name $VERSION contrib/osx.spec
-hdiutil create -fs HFS+ -volname "Electrum" -srcfolder dist/Electrum.app dist/electrum-$VERSION.dmg
+hdiutil create -fs HFS+ -volname "Electron-Cash" -srcfolder dist/Electron-Cash.app dist/electron-cash-$VERSION.dmg
