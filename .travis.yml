@@ -23,9 +23,6 @@ matrix:
     env: 
       HOMEBREW_NO_AUTO_UPDATE=1
       OS_ENV=osx
-before_install:
-- openssl aes-256-cbc -K $encrypted_b3c4f2bd25af_key -iv $encrypted_b3c4f2bd25af_iv
-  -in EasyElectrumBuilder_deploy.enc -out EasyElectrumBuilder_deploy -d
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update; sudo  apt-get install -y
@@ -35,20 +32,10 @@ install:
 script:
 - echo "skip tox for build testing"
 after_success:
-- if [ "$TRAVIS_BRANCH" = "example-travis-config" ]; then echo "TRAVIS BUILD " ; fi
-- pip3 install pyinstaller pycurl requests PyQt5
-- pip3 install groestlcoin-hash trezor keepkey btchip-python
-- if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "linux placeholder" ; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install protobuf-c gettext wput ; echo "[install]"
-  > setup.cfg ; echo "prefix=" >> setup.cfg ; fi
-- pyrcc5 icons.qrc -o gui/qt/icons_rc.py
-- protoc --proto_path=lib/ --python_out=lib/ lib/paymentrequest.proto
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then export PATH="/usr/local/opt/gettext/bin:$PATH"; export  LDFLAGS="-L/usr/local/opt/gettext/lib" ;export CPPFLAGS="-I/usr/local/opt/gettext/include" ; fi
-- contrib/make_locale
-- contrib/make_packages
-- rm setup.cfg
-- python3 setup.py install
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then contrib/make_osx; else  echo "test over"
-  ; fi
-- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_COMMIT}/${OS_ENV}/ ; fi
+- export GIT_COMMIT_SHORT=$(git rev-parse --short HEAD)
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install openssl protobuf-c gettext wput; fi
+- ./contrib/freeze_packages.sh
+- ./electrum-build-env
+- if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}; fi
+- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${GIT_COMMIT_SHORT}/${OS_ENV}/ ; fi
 
