@@ -37,5 +37,5 @@ after_success:
 - ./contrib/freeze_packages.sh
 - ./electrum-build-env
 - if [ -z "${TRAVIS_TAG}" ]; then export VERSION=${GIT_COMMIT_SHORT}; else export VERSION=${TRAVIS_TAG}; fi
-- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://travisftp:CradKobask@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${GIT_COMMIT_SHORT}/${OS_ENV}/ ; fi
+- if [ ! -z  "${TRAVIS_TAG}" ] ; then  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_TAG}/${OS_ENV}/ ; else  wput dist/ ftp://${FTP_USER}:${FTP_PASS}@deploygrs.maza.club/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${GIT_COMMIT_SHORT}/${OS_ENV}/ ; fi
 
