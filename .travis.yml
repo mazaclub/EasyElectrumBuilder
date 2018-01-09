@@ -29,7 +29,6 @@ install:
   libgnutls-dev wput ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi
-=======
 python:
     - 3.5
     - 3.6
