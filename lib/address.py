@@ -132,6 +132,8 @@ class PublicKey(namedtuple("PublicKeyTuple", "pubkey")):
     @classmethod
     def from_pubkey(cls, pubkey):
         '''Create from a public key expressed as binary bytes.'''
+        if isinstance(pubkey, str):
+            pubkey = hex_to_bytes(pubkey)
         cls.validate(pubkey)
         return cls(to_bytes(pubkey))
 
@@ -167,16 +169,14 @@ class PublicKey(namedtuple("PublicKeyTuple", "pubkey")):
         return cls.from_pubkey(hex_to_bytes(string))
 
     @classmethod
-    def validate(cls, pubkey, req_compressed=False):
+    def validate(cls, pubkey):
         if not isinstance(pubkey, (bytes, bytearray)):
             raise TypeError('pubkey must be of bytes type, not {}'
                             .format(type(pubkey)))
         if len(pubkey) == 33 and pubkey[0] in (2, 3):
             return  # Compressed
         if len(pubkey) == 65 and pubkey[0] == 4:
-            if not req_compressed:
-                return
-            raise AddressError('compressed public keys are required')
+            return  # Uncompressed
         raise AddressError('invalid pubkey {}'.format(pubkey))
 
     @cachedproperty
@@ -199,6 +199,18 @@ class PublicKey(namedtuple("PublicKeyTuple", "pubkey")):
     def to_script(self):
         '''Note this returns the P2PK script.'''
         return Script.P2PK_script(self.pubkey)
+
+    def to_script_hex(self):
+        '''Return a script to pay to the address as a hex string.'''
+        return self.to_script().hex()
+
+    def to_scripthash(self):
+        '''Returns the hash of the script in binary.'''
+        return sha256(self.to_script())
+
+    def to_scripthash_hex(self):
+        '''Like other bitcoin hashes this is reversed when written in hex.'''
+        return hash_to_hex_str(self.to_scripthash())
 
     def to_P2PKH_script(self):
         '''Return a P2PKH script.'''
@@ -269,12 +281,15 @@ class Address(namedtuple("AddressTuple", "hash160 kind")):
     @classmethod
     def from_cashaddr_string(cls, string):
         '''Construct from a cashaddress string.'''
-        if not string.startswith(NetworkConstants.CASHADDR_PREFIX):
-            string = ':'.join([NetworkConstants.CASHADDR_PREFIX, string])
-        prefix, kind, addr_hash = cashaddr.decode(string)
-        if prefix != NetworkConstants.CASHADDR_PREFIX:
+        prefix = NetworkConstants.CASHADDR_PREFIX
+        if string.upper() == string:
+            prefix = prefix.upper()
+        if not string.startswith(prefix + ':'):
+            string = ':'.join([prefix, string])
+        addr_prefix, kind, addr_hash = cashaddr.decode(string)
+        if addr_prefix != prefix:
             raise AddressError('address has unexpected prefix {}'
-                               .format(prefix))
+                               .format(addr_prefix))
         if kind == cashaddr.PUBKEY_TYPE:
             return cls(addr_hash, cls.ADDR_P2PKH)
         else:
@@ -304,6 +319,14 @@ class Address(namedtuple("AddressTuple", "hash160 kind")):
             raise AddressError('unknown version byte: {}'.format(verbyte))
 
         return cls(hash160, kind)
+
+    @classmethod
+    def is_valid(cls, string):
+        try:
+            cls.from_string(string)
+            return True
+        except Exception:
+            return False
 
     @classmethod
     def from_strings(cls, strings):
@@ -366,9 +389,30 @@ class Address(namedtuple("AddressTuple", "hash160 kind")):
 
         return Base58.encode_check(bytes([verbyte]) + self.hash160)
 
+    def to_full_string(self, fmt):
+        '''Convert to text, with a URI prefix for cashaddr format.'''
+        text = self.to_string(fmt)
+        if fmt == self.FMT_CASHADDR:
+            text = ':'.join([NetworkConstants.CASHADDR_PREFIX, text])
+        return text
+
     def to_ui_string(self):
         '''Convert to text in the current UI format choice.'''
         return self.to_string(self.FMT_UI)
+
+    def to_full_ui_string(self):
+        '''Convert to text, with a URI prefix if cashaddr.'''
+        return self.to_full_string(self.FMT_UI)
+
+    def to_URI_components(self):
+        '''Returns a (scheme, path) pair for building a URI.'''
+        scheme = NetworkConstants.CASHADDR_PREFIX
+        path = self.to_ui_string()
+        # Convert to upper case if CashAddr
+        if self.FMT_UI == self.FMT_CASHADDR:
+            scheme = scheme.upper()
+            path = path.upper()
+        return scheme, path
 
     def to_storage_string(self):
         '''Convert to text in the storage format.'''
@@ -439,7 +483,7 @@ class Script(object):
             raise ScriptError('{:d} of {:d} multisig script not possible'
                               .format(m, n))
         for pubkey in pubkeys:
-            PublicKey.validate(pubkey, req_compressed=True)
+            PublicKey.validate(pubkey)   # Can be compressed or not
         # See https://bitcoin.org/en/developer-guide
         # 2 of 3 is: OP_2 pubkey1 pubkey2 pubkey3 OP_3 OP_CHECKMULTISIG
         return (bytes([OpCodes.OP_1 + m - 1])

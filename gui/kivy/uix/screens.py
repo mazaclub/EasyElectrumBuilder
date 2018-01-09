@@ -21,6 +21,7 @@ from electroncash.util import profiler, format_time, InvalidPassword, NotEnoughF
 from electroncash import bitcoin
 from electroncash.util import timestamp_to_datetime
 from electroncash.web import create_URI, parse_URI
+from electroncash.address import Address
 from electroncash.paymentrequest import PR_UNPAID, PR_PAID, PR_UNKNOWN, PR_EXPIRED
 
 from .context_menu import ContextMenu
@@ -179,7 +180,7 @@ class SendScreen(CScreen):
         try:
             uri = parse_URI(text, self.app.on_pr)
         except:
-            self.app.show_info(_("Not a Bitcoin URI"))
+            self.app.show_info(_("{} is not a BitcoinCash URI".format(text)))
             return
         amount = uri.get('amount')
         self.screen.address = uri.get('address', '')
@@ -218,7 +219,8 @@ class SendScreen(CScreen):
             return
         # save address as invoice
         from electroncash.paymentrequest import make_unsigned_request, PaymentRequest
-        req = {'address':self.screen.address, 'memo':self.screen.message}
+        addr = Address.from_string(self.screen.address)
+        req = {'address': addr, 'memo':self.screen.message}
         amount = self.app.get_amount(self.screen.amount) if self.screen.amount else 0
         req['amount'] = amount
         pr = make_unsigned_request(req).SerializeToString()
@@ -251,7 +253,7 @@ class SendScreen(CScreen):
             if not address:
                 self.app.show_error(_('Recipient not specified.') + ' ' + _('Please scan a Bitcoin address or a payment request'))
                 return
-            if not bitcoin.is_address(address):
+            if not Address.is_valid(address):
                 self.app.show_error(_('Invalid Bitcoin Address') + ':\n' + address)
                 return
             try:
@@ -259,7 +261,8 @@ class SendScreen(CScreen):
             except:
                 self.app.show_error(_('Invalid amount') + ':\n' + self.screen.amount)
                 return
-            outputs = [(bitcoin.TYPE_ADDRESS, address, amount)]
+            outputs = [(bitcoin.TYPE_ADDRESS, Address.from_string(address),
+                        amount)]
         message = self.screen.message
         amount = sum(map(lambda x:x[2], outputs))
         self._do_send(amount, message, outputs)
@@ -313,7 +316,8 @@ class ReceiveScreen(CScreen):
         if not self.screen.address:
             self.get_new_address()
         else:
-            status = self.app.wallet.get_request_status(self.screen.address)
+            addr = Address.from_string(self.screen.address)
+            status = self.app.wallet.get_request_status(addr)
             self.screen.status = _('Payment received') if status == PR_PAID else ''
 
     def clear(self):
@@ -327,14 +331,15 @@ class ReceiveScreen(CScreen):
         self.clear()
         addr = self.app.wallet.get_unused_address()
         if addr is None:
-            addr = self.app.wallet.get_receiving_address().to_ui_string()
+            addr = self.app.wallet.get_receiving_address()
             b = False
         else:
             b = True
-        self.screen.address = addr
+        self.screen.address = addr.to_ui_string()
         return b
 
-    def on_address(self, addr):
+    def on_address(self, addr_text):
+        addr = Address.from_string(addr_text)
         req = self.app.wallet.get_payment_request(addr, self.app.electrum_config)
         self.screen.status = ''
         if req:
@@ -351,7 +356,8 @@ class ReceiveScreen(CScreen):
             a, u = self.screen.amount.split()
             assert u == self.app.base_unit
             amount = Decimal(a) * pow(10, self.app.decimal_point())
-        return create_URI(self.screen.address, amount, self.screen.message)
+        addr = Address.from_string(self.screen.address)
+        return create_URI(addr, amount, self.screen.message)
 
     @profiler
     def update_qr(self):
@@ -369,7 +375,7 @@ class ReceiveScreen(CScreen):
         self.app.show_info(_('Request copied to clipboard'))
 
     def save_request(self):
-        addr = self.screen.address
+        addr = Address.from_string(self.screen.address)
         amount = self.screen.amount
         message = self.screen.message
         amount = self.app.get_amount(amount) if amount else 0
@@ -483,7 +489,7 @@ class AddressScreen(CScreen):
         if ci is None:
             ci = Factory.AddressItem()
             ci.screen = self
-            ci.address = addr
+            ci.address = addr.to_ui_string()
             self.cards[addr] = ci
 
         ci.memo = label
@@ -512,13 +518,13 @@ class AddressScreen(CScreen):
     def update(self):
         self.menu_actions = [('Receive', self.do_show), ('Details', self.do_view)]
         wallet = self.app.wallet
-        _list = wallet.change_addresses if self.screen.show_change else wallet.receiving_addresses
+        _list = wallet.get_change_addresses() if self.screen.show_change else wallet.get_receiving_addresses()
         search = self.screen.message
         container = self.screen.ids.search_container
         container.clear_widgets()
         n = 0
         for address in _list:
-            label = wallet.labels.get(address, '')
+            label = wallet.labels.get(address.to_storage_string(), '')
             balance = sum(wallet.get_addr_balance(address))
             is_used = wallet.is_used(address)
             if self.screen.show_used == 1 and (balance or is_used):
@@ -537,12 +543,14 @@ class AddressScreen(CScreen):
             container.add_widget(EmptyLabel(text=msg))
 
     def do_show(self, obj):
-        self.app.show_request(obj.address)
+        addr = Address.from_string(obj.address)
+        self.app.show_request(addr)
 
     def do_view(self, obj):
-        req = self.app.wallet.get_payment_request(obj.address, self.app.electrum_config)
+        addr = Address.from_string(obj.address)
+        req = self.app.wallet.get_payment_request(addr, self.app.electrum_config)
         if req:
-            c, u, x = self.app.wallet.get_addr_balance(obj.address)
+            c, u, x = self.app.wallet.get_addr_balance(addr)
             balance = c + u + x
             if balance > 0:
                 req['fund'] = balance
@@ -556,11 +564,10 @@ class AddressScreen(CScreen):
                 received_amount = self.app.wallet.get_addr_received(address)
                 status = self.app.format_amount_and_units(received_amount)
             self.app.show_pr_details(req, status, False)
-
         else:
-            req = { 'address': obj.address, 'status' : obj.status }
+            req = { 'address': addr, 'status' : obj.status }
             status = obj.status
-            c, u, x = self.app.wallet.get_addr_balance(obj.address)
+            c, u, x = self.app.wallet.get_addr_balance(addr)
             balance = c + u + x
             if balance > 0:
                 req['fund'] = balance
@@ -570,7 +577,8 @@ class AddressScreen(CScreen):
         from .dialogs.question import Question
         def cb(result):
             if result:
-                self.app.wallet.remove_payment_request(obj.address, self.app.electrum_config)
+                addr = Address.from_string(obj.address)
+                self.app.wallet.remove_payment_request(addr, self.app.electrum_config)
                 self.update()
         d = Question(_('Delete request?'), cb)
         d.open()

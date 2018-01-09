@@ -7,6 +7,7 @@ import traceback
 from decimal import Decimal
 import threading
 
+from electroncash.address import Address
 from electroncash.bitcoin import TYPE_ADDRESS
 from electroncash import WalletStorage, Wallet
 from electroncash_gui.kivy.i18n import _
@@ -328,7 +329,7 @@ class ElectrumWindow(App):
 
     @profiler
     def update_tabs(self):
-        for tab in ['invoices', 'send', 'history', 'receive', 'requests']:
+        for tab in ['invoices', 'send', 'history', 'receive', 'address']:
             self.update_tab(tab)
 
     def switch_to(self, name):
@@ -342,7 +343,7 @@ class ElectrumWindow(App):
 
     def show_request(self, addr):
         self.switch_to('receive')
-        self.receive_screen.screen.address = addr
+        self.receive_screen.screen.address = addr.to_ui_string()
 
     def show_pr_details(self, req, status, is_invoice):
         from electroncash.util import format_time
@@ -354,7 +355,7 @@ class ElectrumWindow(App):
         popup = Builder.load_file('gui/kivy/uix/ui_screens/invoice.kv')
         popup.is_invoice = is_invoice
         popup.amount = amount
-        popup.requestor = requestor if is_invoice else req.get('address')
+        popup.requestor = requestor if is_invoice else req.get('address').to_ui_string()
         popup.exp = format_time(exp) if exp else ''
         popup.description = memo if memo else ''
         popup.signature = req.get('signature', '')
@@ -374,7 +375,7 @@ class ElectrumWindow(App):
         popup.isaddr = isaddr
         popup.is_invoice = False
         popup.status = status
-        popup.requestor = req.get('address')
+        popup.requestor = req.get('address').to_ui_string()
         popup.fund = fund if fund else 0
         popup.export = self.export_private_keys
         popup.open()
@@ -387,45 +388,22 @@ class ElectrumWindow(App):
     def scan_qr(self, on_complete):
         if platform != 'android':
             return
-        from jnius import autoclass
+        from jnius import autoclass, cast
         from android import activity
         PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        SimpleScannerActivity = autoclass("org.electrum.qr.SimpleScannerActivity")
         Intent = autoclass('android.content.Intent')
-        intent = Intent("com.google.zxing.client.android.SCAN")
-        intent.putExtra("SCAN_MODE", "QR_CODE_MODE")
-        def on_qr_result(requestCode, resultCode, intent):
-            if requestCode == 0:
-                if resultCode == -1: # RESULT_OK:
-                    contents = intent.getStringExtra("SCAN_RESULT")
-                    if intent.getStringExtra("SCAN_RESULT_FORMAT") == 'QR_CODE':
-                        on_complete(contents)
-                    else:
-                        self.show_error("wrong format " + intent.getStringExtra("SCAN_RESULT_FORMAT"))
-        activity.bind(on_activity_result=on_qr_result)
-        try:
-            PythonActivity.mActivity.startActivityForResult(intent, 0)
-        except:
-            self.show_error(_('Could not start Barcode Scanner.') + ' ' + _('Please install the Barcode Scanner app from ZXing'))
+        intent = Intent(PythonActivity.mActivity, SimpleScannerActivity)
 
-    def scan_qr_zxing(self, on_complete):
-        # uses zxing embedded lib
-        if platform != 'android':
-            return
-        from jnius import autoclass
-        from android import activity
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        IntentIntegrator = autoclass('com.google.zxing.integration.android.IntentIntegrator')
-        integrator = IntentIntegrator(PythonActivity.mActivity)
         def on_qr_result(requestCode, resultCode, intent):
-            if requestCode == 0:
-                if resultCode == -1: # RESULT_OK:
-                    contents = intent.getStringExtra("SCAN_RESULT")
-                    if intent.getStringExtra("SCAN_RESULT_FORMAT") == 'QR_CODE':
-                        on_complete(contents)
-                    else:
-                        self.show_error("wrong format " + intent.getStringExtra("SCAN_RESULT_FORMAT"))
+            if resultCode == -1:  # RESULT_OK:
+                #  this doesn't work due to some bug in jnius:
+                # contents = intent.getStringExtra("text")
+                String = autoclass("java.lang.String")
+                contents = intent.getStringExtra(String("text"))
+                on_complete(contents)
         activity.bind(on_activity_result=on_qr_result)
-        integrator.initiateScan()
+        PythonActivity.mActivity.startActivityForResult(intent, 0)
 
     def do_share(self, data, title):
         if platform != 'android':
@@ -946,9 +924,15 @@ class ElectrumWindow(App):
         self._password_dialog.open()
 
     def export_private_keys(self, pk_label, addr):
+        if self.wallet.is_watching_only():
+            self.show_info(_('This is a watching-only wallet. It does not contain private keys.'))
+            return
         def show_private_key(addr, pk_label, password):
             if self.wallet.has_password() and password is None:
                 return
+            if not self.wallet.can_export():
+                return
+            addr = Address.from_string(addr)
             key = self.wallet.export_private_key(addr, password)
             pk_label.data = key
         self.protected(_("Enter your PIN code in order to decrypt your private key"), show_private_key, (addr, pk_label))

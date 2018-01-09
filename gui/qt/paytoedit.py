@@ -32,11 +32,11 @@ import re
 from decimal import Decimal
 from electroncash import bitcoin
 from electroncash.address import Address, ScriptOutput
+from electroncash.networks import NetworkConstants
 
 from . import util
 
-RE_ADDRESS = '[1-9A-HJ-NP-Za-km-z]{26,}'
-RE_ALIAS = '(.*?)\s*\<([1-9A-HJ-NP-Za-km-z]{26,})\>'
+RE_ALIAS = '^(.*?)\s*\<([1-9A-Za-z]{26,})\>$'
 
 frozen_style = "QWidget { background-color:none; border:none;}"
 normal_style = "QPlainTextEdit { }"
@@ -82,22 +82,22 @@ class PayToEdit(ScanQRTextEdit):
 
     def parse_output(self, x):
         try:
-            return bitcoin.TYPE_ADDRESS, Address.from_string(x)
+            address = self.parse_address(x)
+            return bitcoin.TYPE_ADDRESS, address
         except:
             return bitcoin.TYPE_SCRIPT, ScriptOutput.from_string(x)
+
+    def parse_address(self, line):
+        r = line.strip()
+        m = re.match(RE_ALIAS, r)
+        address = m.group(2) if m else r
+        return Address.from_string(address)
 
     def parse_amount(self, x):
         if x.strip() == '!':
             return '!'
         p = pow(10, self.amount_edit.decimal_point())
         return int(p * Decimal(x.strip()))
-
-    def parse_address(self, line):
-        r = line.strip()
-        m = re.match('^'+RE_ALIAS+'$', r)
-        address = str(m.group(2) if m else r)
-        assert bitcoin.is_address(address)
-        return address
 
     def check_text(self):
         self.errors = []
@@ -110,7 +110,7 @@ class PayToEdit(ScanQRTextEdit):
         self.payto_address = None
         if len(lines) == 1:
             data = lines[0]
-            if data.startswith("bitcoincash:"):
+            if data.lower().startswith(NetworkConstants.CASHADDR_PREFIX + ":"):
                 self.scan_f(data)
                 return
             try:

@@ -34,7 +34,7 @@ if platform.system() in ['Linux', 'FreeBSD', 'DragonFly']:
 
 setup(
     name="Electron Cash",
-    version=version.ELECTRUM_VERSION,
+    version=version.PACKAGE_VERSION,
     install_requires=[
         'pyaes>=0.1a1',
         'ecdsa>=0.9',
@@ -45,6 +45,7 @@ setup(
         'dnspython',
         'jsonrpclib-pelix',
         'PySocks>=1.6.6',
+        'pyqt5',
     ],
     packages=[
         'electroncash',

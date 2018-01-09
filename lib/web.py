@@ -78,13 +78,13 @@ def BE_sorted_list():
 def create_URI(addr, amount, message):
     if not isinstance(addr, Address):
         return ""
-    path = addr.to_ui_string()
+    scheme, path = addr.to_URI_components()
     query = []
     if amount:
         query.append('amount=%s'%format_satoshis_plain(amount))
     if message:
         query.append('message=%s'%urllib.parse.quote(message))
-    p = urllib.parse.ParseResult(scheme=NetworkConstants.CASHADDR_PREFIX,
+    p = urllib.parse.ParseResult(scheme=scheme,
                                  netloc='', path=path, params='',
                                  query='&'.join(query), fragment='')
     return urllib.parse.urlunparse(p)
@@ -100,6 +100,7 @@ def parse_URI(uri, on_pr=None):
         return {'address': uri}
 
     u = urllib.parse.urlparse(uri)
+    # The scheme always comes back in lower case
     if u.scheme != NetworkConstants.CASHADDR_PREFIX:
         raise Exception("Not a {} URI".format(NetworkConstants.CASHADDR_PREFIX))
     address = u.path
@@ -119,6 +120,7 @@ def parse_URI(uri, on_pr=None):
     if address:
         Address.from_string(address)
         out['address'] = address
+
     if 'amount' in out:
         am = out['amount']
         m = re.match('([0-9\.]+)X([0-9])', am)

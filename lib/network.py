@@ -41,7 +41,7 @@ from .bitcoin import *
 from .networks import NetworkConstants
 from .interface import Connection, Interface
 from . import blockchain
-from .version import ELECTRUM_VERSION, PROTOCOL_VERSION
+from .version import PACKAGE_VERSION, PROTOCOL_VERSION
 
 
 NODES_RETRY_INTERVAL = 60
@@ -107,7 +107,8 @@ proxy_modes = ['socks4', 'socks5', 'http']
 def serialize_proxy(p):
     if not isinstance(p, dict):
         return None
-    return ':'.join([p.get('mode'),p.get('host'), p.get('port'), p.get('user'), p.get('password')])
+    return ':'.join([p.get('mode'), p.get('host'), p.get('port'),
+                     p.get('user', ''), p.get('password', '')])
 
 
 def deserialize_proxy(s):
@@ -172,16 +173,17 @@ class Network(util.DaemonThread):
         self.blockchain_index = config.get('blockchain_index', 0)
         if self.blockchain_index not in self.blockchains.keys():
             self.blockchain_index = 0
+        self.protocol = 't' if self.config.get('nossl') else 's'
         # Server for addresses and transactions
         self.default_server = self.config.get('server')
         # Sanitize default server
         try:
-            deserialize_server(self.default_server)
+            host, port, protocol = deserialize_server(self.default_server)
+            assert protocol == self.protocol
         except:
             self.default_server = None
         if not self.default_server:
             self.default_server = pick_random_server()
-
         self.lock = threading.Lock()
         self.pending_sends = []
         self.message_id = 0
@@ -218,8 +220,7 @@ class Network(util.DaemonThread):
         self.auto_connect = self.config.get('auto_connect', True)
         self.connecting = set()
         self.socket_queue = queue.Queue()
-        self.start_network(deserialize_server(self.default_server)[2],
-                           deserialize_proxy(self.config.get('proxy')))
+        self.start_network(self.protocol, deserialize_proxy(self.config.get('proxy')))
 
     def register_callback(self, callback, events):
         with self.lock:
@@ -305,6 +306,9 @@ class Network(util.DaemonThread):
         # Resend unanswered requests
         requests = self.unanswered_requests.values()
         self.unanswered_requests = {}
+        if self.interface.ping_required():
+            params = [PACKAGE_VERSION, PROTOCOL_VERSION]
+            self.queue_request('server.version', params, self.interface)
         for request in requests:
             message_id = self.queue_request(request[0], request[1])
             self.unanswered_requests[message_id] = request
@@ -313,9 +317,6 @@ class Network(util.DaemonThread):
         self.queue_request('server.peers.subscribe', [])
         self.request_fee_estimates()
         self.queue_request('blockchain.relayfee', [])
-        if self.interface.ping_required():
-            params = [ELECTRUM_VERSION, PROTOCOL_VERSION]
-            self.queue_request('server.version', params, self.interface)
         for h in self.subscribed_addresses:
             self.queue_request('blockchain.scripthash.subscribe', [h])
 
@@ -711,7 +712,7 @@ class Network(util.DaemonThread):
             if interface.has_timed_out():
                 self.connection_down(interface.server)
             elif interface.ping_required():
-                params = [ELECTRUM_VERSION, PROTOCOL_VERSION]
+                params = [PACKAGE_VERSION, PROTOCOL_VERSION]
                 self.queue_request('server.version', params, interface)
 
         now = time.time()

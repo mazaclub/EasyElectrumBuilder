@@ -81,7 +81,7 @@ def command(s):
             wallet = args[0].wallet
             password = kwargs.get('password')
             if c.requires_wallet and wallet is None:
-                raise BaseException("wallet not loaded. Use 'electrum daemon load_wallet'")
+                raise BaseException("wallet not loaded. Use 'electron-cash daemon load_wallet'")
             if c.requires_password and password is None and wallet.storage.get('use_encryption'):
                 return {'error': 'Password required' }
             return func(*args, **kwargs)
@@ -290,7 +290,7 @@ class Commands:
     @command('')
     def dumpprivkeys(self):
         """Deprecated."""
-        return "This command is deprecated. Use a pipe instead: 'electrum listaddresses | electrum getprivatekeys - '"
+        return "This command is deprecated. Use a pipe instead: 'electron-cash listaddresses | electron-cash getprivatekeys - '"
 
     @command('')
     def validateaddress(self, address):
@@ -345,9 +345,9 @@ class Commands:
 
     @command('')
     def version(self):
-        """Return the version of electrum."""
-        from .version import ELECTRUM_VERSION
-        return ELECTRUM_VERSION
+        """Return the version of electron-cash."""
+        from .version import PACKAGE_VERSION
+        return PACKAGE_VERSION
 
     @command('w')
     def getmpk(self):
@@ -817,11 +817,12 @@ def add_global_options(parser):
     group.add_argument("-P", "--portable", action="store_true", dest="portable", default=False, help="Use local 'electrum_data' directory")
     group.add_argument("-w", "--wallet", dest="wallet_path", help="wallet path")
     group.add_argument("--testnet", action="store_true", dest="testnet", default=False, help="Use Testnet")
+    group.add_argument("--nossl", action="store_true", dest="nossl", default=False, help="Disable SSL")
 
 def get_parser():
     # create main parser
     parser = argparse.ArgumentParser(
-        epilog="Run 'electrum help <command>' to see the help for a command")
+        epilog="Run 'electron-cash help <command>' to see the help for a command")
     add_global_options(parser)
     subparsers = parser.add_subparsers(dest='cmd', metavar='<command>')
     # gui
