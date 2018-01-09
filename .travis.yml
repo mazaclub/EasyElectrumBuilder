@@ -24,7 +24,7 @@ matrix:
       HOMEBREW_NO_AUTO_UPDATE=1
       OS_ENV=osx
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install python3 ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew config ; brew install python3 ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ] ;then sudo apt-get update; sudo  apt-get install -y
   libgnutls-dev wput ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
