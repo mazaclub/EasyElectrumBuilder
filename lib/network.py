@@ -105,7 +105,8 @@ proxy_modes = ['socks4', 'socks5', 'http']
 def serialize_proxy(p):
     if not isinstance(p, dict):
         return None
-    return ':'.join([p.get('mode'),p.get('host'), p.get('port'), p.get('user'), p.get('password')])
+    return ':'.join([p.get('mode'), p.get('host'), p.get('port'),
+                     p.get('user', ''), p.get('password', '')])
 
 
 def deserialize_proxy(s):
@@ -949,8 +950,8 @@ class Network(util.DaemonThread):
     def init_headers_file(self):
         b = self.blockchains[0]
         filename = b.path()
-        if not os.path.exists(filename):
-            length = 80 * len(bitcoin.NetworkConstants.CHECKPOINTS) * 2016
+        length = 80 * len(bitcoin.NetworkConstants.CHECKPOINTS) * 2016
+        if not os.path.exists(filename) or os.path.getsize(filename) < length:
             with open(filename, 'wb') as f:
                 if length>0:
                     f.seek(length-1)

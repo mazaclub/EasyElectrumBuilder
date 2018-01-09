@@ -140,7 +140,8 @@ class BaseWizard(object):
         v = lambda x: keystore.is_address_list(x) or keystore.is_private_key_list(x)
         title = _("Import Bitcoin Addresses")
         message = _("Enter a list of Bitcoin addresses (this will create a watching-only wallet), or a list of private keys.")
-        self.add_xpub_dialog(title=title, message=message, run_next=self.on_import, is_valid=v)
+        self.add_xpub_dialog(title=title, message=message, run_next=self.on_import,
+                             is_valid=v, allow_multi=True)
 
     def on_import(self, text):
         if keystore.is_address_list(text):
@@ -236,7 +237,13 @@ class BaseWizard(object):
             _('Enter your wallet derivation here.'),
             _('If you are not sure what this is, leave this field unchanged.')
         ])
-        self.line_dialog(run_next=f, title=_('Derivation'), message=message, default=default, test=bitcoin.is_bip32_derivation)
+        presets = (
+            ('legacy BIP44', bip44_derivation(0, False)),
+            ('p2sh-segwit BIP49', bip44_derivation(0, True)),
+        )
+        self.line_dialog(run_next=f, title=_('Derivation'), message=message,
+                         default=default, test=bitcoin.is_bip32_derivation,
+                         presets=presets)
 
     def on_hw_derivation(self, name, device_info, derivation):
         from .keystore import hardware_keystore
@@ -287,7 +294,7 @@ class BaseWizard(object):
             self.run('create_keystore', seed, '')
         elif self.seed_type == '2fa':
             if self.is_kivy:
-                self.show_error('2FA seeds are not supported in this version')
+                self.show_error(_('2FA seeds are not supported in this version'))
                 self.run('restore_from_seed')
             else:
                 self.load_2fa()
@@ -379,10 +386,10 @@ class BaseWizard(object):
     def choose_seed_type(self):
         title = _('Choose Seed type')
         message = ' '.join([
-            "The type of addresses used by your wallet will depend on your seed.",
-            "Segwit wallets use bech32 addresses, defined in BIP173.",
-            "Please note that websites and other wallets may not support these addresses yet.",
-            "Thus, you might want to keep using a non-segwit wallet in order to be able to receive bitcoins during the transition period."
+            _("The type of addresses used by your wallet will depend on your seed."),
+            _("Segwit wallets use bech32 addresses, defined in BIP173."),
+            _("Please note that websites and other wallets may not support these addresses yet."),
+            _("Thus, you might want to keep using a non-segwit wallet in order to be able to receive bitcoins during the transition period.")
         ])
         choices = [
             ('create_standard_seed', _('Standard')),

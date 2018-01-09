@@ -18,7 +18,7 @@ matrix:
     env:
       OS_ENV=linux_xenial
   - os: osx
-    osx_image: xcode_9.2
+    osx_image: xcode6.4
     language: generic
     env: 
       HOMEBREW_NO_AUTO_UPDATE=1
@@ -29,6 +29,14 @@ install:
   libgnutls-dev wput ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox ; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then pip3 install tox-travis ;fi
+=======
+python:
+    - 3.5
+    - 3.6
+install:
+  - pip install -r requirements_travis.txt
+cache:
+  - pip
 script:
 - echo "skip tox for build testing"
 after_success:

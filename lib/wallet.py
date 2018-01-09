@@ -34,11 +34,16 @@ import time
 import json
 import copy
 import errno
+import traceback
 from functools import partial
 from collections import defaultdict
+from numbers import Number
+
+import sys
 
 from .i18n import _
-from .util import NotEnoughFunds, PrintError, UserCancelled, profiler, format_satoshis
+from .util import (NotEnoughFunds, PrintError, UserCancelled, profiler,
+                   format_satoshis, NoDynamicFeeEstimates)
 
 from .bitcoin import *
 from .version import *
@@ -69,7 +74,7 @@ TX_STATUS = [
 
 
 def relayfee(network):
-    RELAY_FEE = 5000
+    RELAY_FEE = 1000
     MAX_RELAY_FEE = 50000
     f = network.relay_fee if network and network.relay_fee else RELAY_FEE
     return min(f, MAX_RELAY_FEE)
@@ -142,6 +147,7 @@ def sweep(privkeys, network, config, recipient, fee=None, imax=100):
     locktime = network.get_local_height()
 
     tx = Transaction.from_io(inputs, outputs, locktime=locktime)
+    tx.BIP_LI01_sort()
     tx.set_rbf(True)
     tx.sign(keypairs)
     return tx
@@ -879,7 +885,7 @@ class Abstract_Wallet(PrintError):
             raise NotEnoughFunds()
 
         if fixed_fee is None and config.fee_per_kb() is None:
-            raise BaseException('Dynamic fee estimates not available')
+            raise NoDynamicFeeEstimates()
 
         for item in inputs:
             self.add_input_info(item)
@@ -903,8 +909,12 @@ class Abstract_Wallet(PrintError):
         # Fee estimator
         if fixed_fee is None:
             fee_estimator = config.estimate_fee
-        else:
+        elif isinstance(fixed_fee, Number):
             fee_estimator = lambda size: fixed_fee
+        elif callable(fixed_fee):
+            fee_estimator = fixed_fee
+        else:
+            raise BaseException('Invalid argument fixed_fee: %s' % fixed_fee)
 
         if i_max is None:
             # Let the coin chooser select the coins to spend
@@ -959,7 +969,7 @@ class Abstract_Wallet(PrintError):
         # if we are on a pruning server, remove unverified transactions
         with self.lock:
             vr = list(self.verified_tx.keys()) + list(self.unverified_tx.keys())
-        for tx_hash in self.transactions.keys():
+        for tx_hash in list(self.transactions):
             if tx_hash not in vr:
                 self.print_error("removing transaction", tx_hash)
                 self.transactions.pop(tx_hash)
@@ -1072,7 +1082,9 @@ class Abstract_Wallet(PrintError):
         if delta > 0:
             raise BaseException(_('Cannot bump fee: could not find suitable outputs'))
         locktime = self.get_local_height()
-        return Transaction.from_io(inputs, outputs, locktime=locktime)
+        tx_new = Transaction.from_io(inputs, outputs, locktime=locktime)
+        tx_new.BIP_LI01_sort()
+        return tx_new
 
     def cpfp(self, tx, fee):
         txid = tx.txid()
@@ -1090,6 +1102,7 @@ class Abstract_Wallet(PrintError):
         inputs = [item]
         outputs = [(TYPE_ADDRESS, address, value - fee)]
         locktime = self.get_local_height()
+        # note: no need to call tx.BIP_LI01_sort() here - single input/output
         return Transaction.from_io(inputs, outputs, locktime=locktime)
 
     def add_input_info(self, txin):
@@ -1433,9 +1446,6 @@ class Imported_Wallet(Simple_Wallet):
         return False
 
     def is_deterministic(self):
-        return False
-
-    def is_used(self, address):
         return False
 
     def is_change(self, address):
